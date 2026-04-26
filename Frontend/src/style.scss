@@ -1,9 +1,13 @@
-html, body, #root {
-  margin: 0;
-  padding: 0;
-  height: 100%;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-body {
-  background: black;
+html, body, #root {
+    width: 100%;
+    height: 100%;
+    background: black;
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }

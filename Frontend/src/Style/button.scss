@@ -1,0 +1,15 @@
+.button{
+    border: none;
+    outline: none;
+    padding-inline: 1.25rem;
+    padding-block: 0.75rem;
+    border-radius: 1rem;
+    cursor: pointer;
+    font-size: 16px;
+
+
+    &.primary-btn{
+        background: #e1034d;
+        color: white;
+    }
+}
