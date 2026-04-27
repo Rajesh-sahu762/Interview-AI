@@ -33,11 +33,21 @@ main{
 
         input{
             padding: 10px;
-            border-radius: 5px;
+            padding-inline: 1rem;
+            padding-block: 0.75rem;
+            border-radius: 0.75rem;
             border: none;
             outline: none;
             font-size: 16px;
         }
+        
+
+    }
+
+    a{
+        color: #e1034d;
+        cursor: pointer;
+        text-decoration: none;
     }
 
 }
