@@ -22,7 +22,7 @@ async function registerUserController(req, res) {
     await newUser.save();
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     res.cookie('token', token, { httpOnly: true, secure: false, maxAge: 24 * 60 * 60 * 1000 }); // 1 day
-    res.status(201).json({ message: 'User registered successfully', token });
+    res.status(201).json({ message: 'User registered successfully', token, user: { id: newUser._id, username: newUser.UserName, email: newUser.email } });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -45,7 +45,7 @@ async function loginUserController(req, res) {
   }
   const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
   res.cookie('token', token, { httpOnly: true, secure: false, maxAge: 24 * 60 * 60 * 1000 }); // 1 day
-  res.status(200).json({ message: 'Login successful', token });
+  res.status(200).json({ message: 'Login successful', token, user: { id: user._id, username: user.UserName, email: user.email } });
 }
 
 
