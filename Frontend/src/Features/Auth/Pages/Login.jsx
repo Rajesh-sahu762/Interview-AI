@@ -22,7 +22,7 @@ const Login = () => {
   }
 
   if(loading) {
-    return <div>Loading...</div>
+    return (<main><h1>Loading...</h1></main>)
   }
 
   return (
