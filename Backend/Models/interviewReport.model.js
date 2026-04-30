@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 
+
 /* Technical Questions Schema */
 const technicalQuestionsSchema = new mongoose.Schema({
     question: { type: String, required: [true, "Question is required"] },

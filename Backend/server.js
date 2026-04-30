@@ -1,10 +1,10 @@
 require('dotenv').config();
 const app = require('./src/app');
 const connectDB = require('./Config/db');
-const invokeGeminiAi = require('./Services/ai.service').invokeGeminiAi;
+const InterviewReport = require('./Models/interviewReport.model');
 
 connectDB();
-invokeGeminiAi();
+
 
 const PORT = process.env.PORT || 5000;
 
