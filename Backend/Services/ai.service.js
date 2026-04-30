@@ -29,6 +29,8 @@ const interviewReportSchema = z.object({
   })).describe("Preparation Plan Schema"),
 });
 
-async function generateInterviewReport( resume, selfDescription, jobDescription) {
+async function generateInterviewReport( resume, selfDescription, jobDescription)  {
+  
+}{
 
 module.exports = { generateInterviewReport };
