@@ -1,26 +1,33 @@
 const InterviewReport = require('../Models/interviewReport.model');
 const { generateInterviewReport } = require('../Services/ai.service');
-const pdfParse = require('pdf-parse');
-
+const pdfParse = require('pdf-parse/lib/pdf-parse.js');
 
 async function generateInterviewReportController(req, res) {
   try {
 
-    const resumeContent = await pdfParse(req.file.buffer);
+
+    const resumeData = await pdfParse(req.file.buffer);
+
+    const resumeContent = resumeData.text;
+
     const { jobDescription, selfDescription } = req.body;
 
     if (!jobDescription) {
       return res.status(400).json({ message: 'Job description is required' });
     }
 
-    const reportData = await generateInterviewReport(jobDescription, resumeContent, selfDescription);
+    const reportData = await generateInterviewReport({
+        resume: resumeContent || '',
+        selfDescription,
+        jobDescription,
+    });
 
     const interviewReport = await InterviewReport.create({
       jobDescription,
       resume: resumeContent || '',
       selfDescription: selfDescription || '',
       ...reportData,
-      user: req.user._id,
+      user: req.user.userId,
     });
 
     await interviewReport.save();
