@@ -23,7 +23,7 @@ const behaviouralQuestionsSchema = new mongoose.Schema({
 /* Skill Gap Analysis Schema */
 const skillGapSchema = new mongoose.Schema({
     skill: { type: String, required: [true, "Skill is required"] },
-    enum: ['Beginner', 'Intermediate', 'Advanced'],
+    level: { type: String, enum: ['Beginner', 'Intermediate', 'Advanced'], required: true },
     recommendation: { type: String, required: [true, "Recommendation is required"] },
 },{
     _id: false
@@ -36,6 +36,8 @@ const preprationPlanSchema = new mongoose.Schema({
 });
 
 
+
+
 /* Overall Feedback Schema */
 const interviewReportSchema = new mongoose.Schema({
     jobDescription: { type: String, required: true },
@@ -46,6 +48,7 @@ const interviewReportSchema = new mongoose.Schema({
     behaviouralQuestions: [behaviouralQuestionsSchema],
     skillGapAnalysis: [skillGapSchema],
     preparationPlan: [preprationPlanSchema],
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     
 },{
     timestamps: true
