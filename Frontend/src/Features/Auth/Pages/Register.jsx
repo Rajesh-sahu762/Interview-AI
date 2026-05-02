@@ -25,7 +25,7 @@ const Register = () => {
   }
 
   return (
-    <main>
+    <main className='Auth-main'>
       <div className="form-container">
         <h1>Register</h1>
         <form onSubmit={handleSubmit}>
