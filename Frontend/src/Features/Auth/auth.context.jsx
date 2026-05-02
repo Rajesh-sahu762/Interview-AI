@@ -12,12 +12,18 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const getAndSetUser = async () => {
             try {
-            
-            const data = await getMe();
-            setUser(data.user);
-            }catch (error) {} finally {
-
-            setLoading(false);
+                // 5 second timeout for API call
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('API timeout')), 5000)
+                );
+                const data = await Promise.race([getMe(), timeoutPromise]);
+                setUser(data.user);
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                // Even if auth fails, allow user to access app
+                setUser(null);
+            } finally {
+                setLoading(false);
             }
         }
 

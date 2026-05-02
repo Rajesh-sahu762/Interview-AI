@@ -2,7 +2,6 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const {z} = require('zod');
 const { zodToJsonSchema } = require('zod-to-json-schema');
 
-
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const interviewReportSchema = z.object({
@@ -69,8 +68,6 @@ Return ONLY valid JSON with this exact structure:
 }
 
 Generate 5-7 technical questions, 3-5 behavioral questions, 4-6 skill gaps, and a 7-day plan.`;
-
-
 
 async function generateInterviewReport(jobDescription, resume, selfDescription) {
 
