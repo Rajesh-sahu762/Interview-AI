@@ -49,6 +49,7 @@ const interviewReportSchema = new mongoose.Schema({
     skillGapAnalysis: [skillGapSchema],
     preparationPlan: [preprationPlanSchema],
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    title: { type: String, required: true },
     
 },{
     timestamps: true

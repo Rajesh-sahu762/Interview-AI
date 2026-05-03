@@ -1,5 +1,7 @@
 import { useState, useRef } from "react";
 import "../Styles/Home.scss"
+import { useInterview } from "../Hooks/useInterview";
+import { useNavigate } from "react-router";
 
 // ─── Constants ───────────────────────────────────────────────
 const STEPS = [
@@ -25,17 +27,17 @@ const STATS = [
 
 // ─── Component ───────────────────────────────────────────────
 export default function Home() {
-  const [step, setStep]                         = useState(0);
-  const [resumeFile, setResumeFile]             = useState(null);
-  const [resumeText, setResumeText]             = useState("");
-  const [jobTitle, setJobTitle]                 = useState("");
-  const [jobDescription, setJobDescription]     = useState("");
-  const [selfDescription, setSelfDescription]   = useState("");
-  const [isDragging, setIsDragging]             = useState(false);
-  const [isLoading, setIsLoading]               = useState(false);
-  const [toast, setToast]                       = useState(null);
-
-  const fileRef = useRef();
+  const [toast, setToast] = useState(null);
+  const { loading, generateReport } = useInterview();
+  const resumeInputRef = useRef();
+  const [selfDescription, setSelfDescription] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
+  const [step, setStep] = useState(0);
+  const [resumeFile, setResumeFile] = useState(null);
+  const [resumeText, setResumeText] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // ── Helpers ─────────────────────────────────────────────────
   const showToast = (msg) => {
@@ -43,8 +45,41 @@ export default function Home() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const navigate = useNavigate();
+
+  const handleGenerate = async () => {
+    try {
+      const formData = new FormData();
+      if (resumeFile) {
+        formData.append("resume", resumeFile);
+      } else if (resumeText.trim()) {
+        formData.append("resumeText", resumeText.trim());
+      } else {
+        showToast("Please upload your resume or paste resume text.");
+        return;
+      }
+
+      formData.append("jobDescription", jobDescription);
+      formData.append("selfDescription", selfDescription);
+
+      const data = await generateReport(formData);
+      navigate(`/interview/${data.report._id}`);
+      showToast("Interview report generated successfully!");
+    } catch (error) {
+      showToast("Failed to generate report. Please try again.");
+    }
+  };
+
   const handleFileChange = (file) => {
     if (!file) return;
+    
+    // Check file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      showToast("File size exceeds 5MB limit. Please upload a smaller file.");
+      return;
+    }
+    
     const allowed = [
       "application/pdf",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -77,15 +112,22 @@ export default function Home() {
       showToast("Please write a short self-description.");
       return;
     }
+
+    if (!jobDescription.trim()) {
+      showToast("Please enter the job description.");
+      setStep(1);
+      return;
+    }
+
+    if (!resumeFile && !resumeText.trim()) {
+      showToast("Please upload your resume or paste your resume text.");
+      setStep(0);
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // TODO: Replace with your actual API call
-      // const result = await generateInterviewPrep({
-      //   resumeFile, resumeText, jobTitle, jobDescription, selfDescription
-      // });
-      // navigate("/results", { state: result });
-      await new Promise((r) => setTimeout(r, 2200)); // ← remove after wiring API
-      showToast("Analysis complete! Redirecting...");
+      await handleGenerate();
     } finally {
       setIsLoading(false);
     }
@@ -197,7 +239,7 @@ export default function Home() {
                   <input
                     type="file"
                     accept=".pdf,.docx,.txt"
-                    ref={fileRef}
+                    ref={resumeInputRef}
                     onChange={(e) => handleFileChange(e.target.files?.[0])}
                   />
                   {resumeFile ? (
@@ -206,7 +248,13 @@ export default function Home() {
                       <span>{resumeFile.name}</span>
                       <button
                         className="file-remove"
-                        onClick={(e) => { e.stopPropagation(); setResumeFile(null); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setResumeFile(null);
+                          if (resumeInputRef.current) {
+                            resumeInputRef.current.value = "";
+                          }
+                        }}
                       >
                         ✕
                       </button>

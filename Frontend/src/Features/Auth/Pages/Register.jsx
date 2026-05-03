@@ -12,6 +12,40 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validation
+    if (!username || !username.trim()) {
+      setFormError("Username is required");
+      return;
+    }
+    
+    if (username.trim().length < 3) {
+      setFormError("Username must be at least 3 characters long");
+      return;
+    }
+    
+    if (!email || !email.trim()) {
+      setFormError("Email is required");
+      return;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setFormError("Please enter a valid email address");
+      return;
+    }
+    
+    if (!password || !password.trim()) {
+      setFormError("Password is required");
+      return;
+    }
+    
+    if (password.length < 6) {
+      setFormError("Password must be at least 6 characters long");
+      return;
+    }
+    
+    setFormError(null);
     const result = await handleRegister(username, email, password);
     if (result.success) {
       navigate('/login');

@@ -33,12 +33,18 @@
 
         input{
             padding: 10px;
+            background-color: whitesmoke;
             padding-inline: 1rem;
+            color: black;
             padding-block: 0.75rem;
             border-radius: 0.75rem;
             border: none;
             outline: none;
             font-size: 16px;
+        }
+        input:focus{
+            background-color: black;
+            color: white;
         }
         
 

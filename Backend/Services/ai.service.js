@@ -26,6 +26,7 @@ const interviewReportSchema = z.object({
     focus: z.string().describe("The area of focus for the day"),
     tasks: z.string().describe("The tasks to be completed"),
   })).describe("Preparation Plan"),
+  title: z.string().describe("short title of the report based on job description and candidate's background"),
 });
 
 const prompt = `You are an expert career counselor. Based on the candidate's resume, self-description, and job description, generate a comprehensive interview report in JSON format.
@@ -72,7 +73,7 @@ Generate 5-7 technical questions, 3-5 behavioral questions, 4-6 skill gaps, and 
 async function generateInterviewReport(jobDescription, resume, selfDescription) {
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const dynamicPrompt = `You are an expert career counselor. Based on the candidate's resume, self-description, and job description, generate a comprehensive interview report in JSON format.
 
@@ -82,6 +83,7 @@ SELF DESCRIPTION: ${selfDescription || 'Not provided'}
 
 Return ONLY valid JSON with this exact structure:
 {
+ "title": "<short title based on job description>",
   "matchScore": <number 0-100>,
   "technicalQuestions": [
     {

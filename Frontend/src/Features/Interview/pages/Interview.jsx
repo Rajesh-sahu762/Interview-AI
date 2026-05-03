@@ -1,62 +1,76 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router';
 import '../Styles/Interview.scss';
-
-const QUESTIONS = [
-  {
-    id: 102,
-    difficulty: 'MEDIUM',
-    title: 'Implement a Thread-Safe Singleton',
-    question: 'How would you implement a Singleton pattern in a multi-threaded environment? Explain the double-checked locking pattern and its importance.',
-    interviewer: 'This question evaluates your understanding of concurrency, memory visibility (volatile), and design patterns in high-performance system design.',
-    sample: `public class DatabaseConnection {
-  private static volatile DatabaseConnection instance;
-  
-  private DatabaseConnection() {
-    if (instance == null) {
-      synchronized (DatabaseConnection.class) {
-        if (instance == null) {
-          instance = new DatabaseConnection();
-        }
-      }
-    }
-  }
-  
-  public static DatabaseConnection getInstance() {
-    return instance;
-  }
-}`
-  },
-  {
-    id: 103,
-    difficulty: 'HARD',
-    title: 'Design a Distributed Cache',
-    question: 'Design a distributed cache system that handles cache invalidation and consistency.',
-    interviewer: 'Evaluate your understanding of cache strategies and distributed systems.',
-    sample: `Implementation details here...`
-  }
-];
-
-const SKILLS = [
-  { name: 'DATA STRUCTURES', score: 92 },
-  { name: 'SYSTEM DESIGN', score: 78 },
-  { name: 'COMMUNICATION', score: 64 }
-];
-
-const SKILL_GAPS = [
-  { name: 'Distributed Systems', level: 'INTERMEDIATE' },
-  { name: 'Algorithm Design', level: 'ADVANCED' }
-];
-
-const DRILLS = [
-  { name: 'Microservices Design', type: '10 Qs • Deep Study' },
-  { name: 'STAR Method Review', type: '10 Qs • Behavioral' }
-];
+import { useInterview } from '../Hooks/useInterview';
 
 export default function Interview() {
+  const { id } = useParams();
+  const { report, loading, getInterviewReportById } = useInterview();
   const [activeTab, setActiveTab] = useState('TECHNICAL_QUESTIONS');
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswer, setUserAnswer] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Fetch report data on component mount
+  useEffect(() => {
+    const fetchReport = async () => {
+      try {
+        setError(null);
+        await getInterviewReportById(id);
+      } catch (err) {
+        setError('Failed to load interview report. Please try again.');
+        console.error(err);
+      }
+    };
+
+    if (id) {
+      fetchReport();
+    }
+    // getInterviewReportById is intentionally omitted because the hook returns a new function each render.
+    // We only want to fetch once per route id.
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="interview-dashboard">
+        <div className="loading-container">
+          <div className="spinner"></div>
+          <p>Loading your interview report...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="interview-dashboard">
+        <div className="error-container">
+          <p className="error-message">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!report) {
+    return (
+      <div className="interview-dashboard">
+        <div className="error-container">
+          <p className="error-message">Report not found.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Get questions from report or use empty arrays
+  const technicalQuestions = report.technicalQuestions || [];
+  const behavioralQuestions = report.behaviouralQuestions || [];
+  const skillGaps = report.skillGapAnalysis || [];
+  const matchScore = report.matchScore || 0;
+
+  // Combine all questions for navigation
+  const allQuestions = activeTab === 'TECHNICAL_QUESTIONS' ? technicalQuestions : behavioralQuestions;
+  const currentQuestionData = allQuestions[currentQuestion] || null;
 
   const tabs = [
     { id: 'TECHNICAL_QUESTIONS', label: 'TECHNICAL QUESTIONS' },
@@ -65,10 +79,16 @@ export default function Interview() {
     { id: 'PERFORMANCE', label: 'PERFORMANCE' }
   ];
 
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    setCurrentQuestion(0);
+  };
+
   const handleSubmitAnswer = () => {
     setSubmitted(true);
     setTimeout(() => {
-      setCurrentQuestion((prev) => Math.min(prev + 1, QUESTIONS.length - 1));
+      const maxQuestions = activeTab === 'TECHNICAL_QUESTIONS' ? technicalQuestions.length : behavioralQuestions.length;
+      setCurrentQuestion((prev) => Math.min(prev + 1, maxQuestions - 1));
       setSubmitted(false);
       setUserAnswer('');
     }, 2000);
@@ -141,7 +161,7 @@ export default function Interview() {
                 <button
                   key={tab.id}
                   className={`tab ${activeTab === tab.id ? 'tab--active' : ''}`}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabChange(tab.id)}
                 >
                   {tab.label}
                 </button>
@@ -149,55 +169,94 @@ export default function Interview() {
             </div>
 
             {/* Question Card */}
-            <div className="question-card">
-              <div className="question-header">
-                <div className="question-meta">
-                  <span className="question-num">QUESTION {QUESTIONS[currentQuestion].id}</span>
-                  <span className={`question-difficulty difficulty-${QUESTIONS[currentQuestion].difficulty.toLowerCase()}`}>
-                    {QUESTIONS[currentQuestion].difficulty}
-                  </span>
-                </div>
-                <button className="bookmark-btn">🔖</button>
+            {activeTab === 'TECHNICAL_QUESTIONS' || activeTab === 'BEHAVIORAL_QUESTIONS' ? (
+              <div className="question-card">
+                {currentQuestionData ? (
+                  <>
+                    <div className="question-header">
+                      <div className="question-meta">
+                        <span className="question-num">QUESTION {currentQuestion + 1}</span>
+                      </div>
+                      <button className="bookmark-btn">🔖</button>
+                    </div>
+
+                    <h3 className="question-title">{currentQuestionData.question}</h3>
+
+                    <div className="question-content">
+                      <div className="content-section">
+                        <p className="section-label">THE INTENTION</p>
+                        <p className="section-text">{currentQuestionData.intention}</p>
+                      </div>
+
+                      <div className="content-section">
+                        <p className="section-label">SAMPLE ANSWER</p>
+                        <pre className="code-block">{currentQuestionData.answer}</pre>
+                      </div>
+                    </div>
+
+                    {/* Answer Input */}
+                    <div className="answer-section">
+                      <label className="answer-label">Your Answer</label>
+                      <textarea
+                        className="answer-textarea"
+                        placeholder="Type your answer here..."
+                        value={userAnswer}
+                        onChange={(e) => setUserAnswer(e.target.value)}
+                        disabled={submitted}
+                      />
+                      <button
+                        className={`submit-answer-btn ${submitted ? 'submitting' : ''}`}
+                        onClick={handleSubmitAnswer}
+                        disabled={submitted || !userAnswer.trim()}
+                      >
+                        {submitted ? 'Evaluating...' : 'Submit Answer'}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="no-questions">
+                    <p>No {activeTab === 'TECHNICAL_QUESTIONS' ? 'technical' : 'behavioral'} questions available.</p>
+                  </div>
+                )}
               </div>
-
-              <h3 className="question-title">{QUESTIONS[currentQuestion].title}</h3>
-
-              <div className="question-content">
-                <div className="content-section">
-                  <p className="section-label">THE QUESTION</p>
-                  <p className="section-text">{QUESTIONS[currentQuestion].question}</p>
-                </div>
-
-                <div className="content-section">
-                  <p className="section-label">THE INTERVIEW</p>
-                  <p className="section-text">{QUESTIONS[currentQuestion].interviewer}</p>
-                </div>
-
-                <div className="content-section">
-                  <p className="section-label">SAMPLE ANSWER</p>
-                  <pre className="code-block">{QUESTIONS[currentQuestion].sample}</pre>
+            ) : activeTab === 'SKILL_GAP_ANALYSIS' ? (
+              <div className="question-card">
+                <h3 className="section-title">Skill Gap Analysis</h3>
+                <div className="gap-grid-main">
+                  {skillGaps.length > 0 ? (
+                    skillGaps.map((gap, i) => (
+                      <div key={i} className="gap-card-main">
+                        <div className="gap-skill-name">{gap.skill}</div>
+                        <div className={`gap-level-badge gap-level-${gap.level.toLowerCase()}`}>
+                          {gap.level}
+                        </div>
+                        <p className="gap-recommendation">{gap.recommendation}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p>No skill gaps identified.</p>
+                  )}
                 </div>
               </div>
-
-              {/* Answer Input */}
-              <div className="answer-section">
-                <label className="answer-label">Your Answer</label>
-                <textarea
-                  className="answer-textarea"
-                  placeholder="Type your answer here..."
-                  value={userAnswer}
-                  onChange={(e) => setUserAnswer(e.target.value)}
-                  disabled={submitted}
-                />
-                <button
-                  className={`submit-answer-btn ${submitted ? 'submitting' : ''}`}
-                  onClick={handleSubmitAnswer}
-                  disabled={submitted || !userAnswer.trim()}
-                >
-                  {submitted ? 'Evaluating...' : 'Submit Answer'}
-                </button>
+            ) : (
+              <div className="question-card">
+                <h3 className="section-title">Performance Overview</h3>
+                <div className="performance-overview">
+                  <div className="performance-stat">
+                    <span className="stat-label">Match Score</span>
+                    <span className="stat-value">{matchScore}%</span>
+                  </div>
+                  <div className="performance-stat">
+                    <span className="stat-label">Technical Questions</span>
+                    <span className="stat-value">{technicalQuestions.length}</span>
+                  </div>
+                  <div className="performance-stat">
+                    <span className="stat-label">Behavioral Questions</span>
+                    <span className="stat-value">{behavioralQuestions.length}</span>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Right Sidebar */}
@@ -220,39 +279,29 @@ export default function Interview() {
                   />
                 </svg>
                 <div className="stat-center">
-                  <div className="stat-value">85%</div>
+                  <div className="stat-value">{matchScore}%</div>
                   <div className="stat-label">MATCH</div>
                 </div>
               </div>
 
-              <p className="stat-note">Your performance is in the top 5% of active users</p>
+              <p className="stat-note">Your match score with the job description</p>
             </div>
 
-            {/* Skill Progression */}
+            {/* Questions Summary */}
             <div className="skill-section">
-              <h3 className="section-title">SKILL PROGRESSION</h3>
-              {SKILLS.map((skill, i) => (
-                <div key={i} className="skill-item">
-                  <div className="skill-header">
-                    <span className="skill-name">{skill.name}</span>
-                    <span className="skill-score">{skill.score}%</span>
-                  </div>
-                  <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${skill.score}%` }}></div>
-                  </div>
+              <h3 className="section-title">QUESTIONS SUMMARY</h3>
+              <div className="skill-item">
+                <div className="skill-header">
+                  <span className="skill-name">Technical</span>
+                  <span className="skill-score">{technicalQuestions.length}</span>
                 </div>
-              ))}
-            </div>
-
-            {/* Today's Drills */}
-            <div className="drills-section">
-              <h3 className="section-title">TODAY'S DRILLS</h3>
-              {DRILLS.map((drill, i) => (
-                <div key={i} className="drill-item">
-                  <div className="drill-title">{drill.name}</div>
-                  <div className="drill-meta">{drill.type}</div>
+              </div>
+              <div className="skill-item">
+                <div className="skill-header">
+                  <span className="skill-name">Behavioral</span>
+                  <span className="skill-score">{behavioralQuestions.length}</span>
                 </div>
-              ))}
+              </div>
             </div>
           </aside>
         </div>
@@ -265,14 +314,19 @@ export default function Interview() {
           </div>
 
           <div className="gap-grid">
-            {SKILL_GAPS.map((gap, i) => (
-              <div key={i} className="gap-card">
-                <div className="gap-name">{gap.name}</div>
-                <div className={`gap-badge gap-badge-${gap.level.toLowerCase()}`}>
-                  {gap.level}
+            {skillGaps.length > 0 ? (
+              skillGaps.map((gap, i) => (
+                <div key={i} className="gap-card">
+                  <div className="gap-name">{gap.skill}</div>
+                  <div className={`gap-badge gap-badge-${gap.level.toLowerCase()}`}>
+                    {gap.level}
+                  </div>
+                  <p className="gap-desc">{gap.recommendation}</p>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p>No skill gaps identified.</p>
+            )}
           </div>
         </div>
       </main>

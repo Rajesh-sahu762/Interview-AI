@@ -13,6 +13,26 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validation
+    if (!email || !email.trim()) {
+      setFormError("Email is required");
+      return;
+    }
+    
+    if (!password || !password.trim()) {
+      setFormError("Password is required");
+      return;
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setFormError("Please enter a valid email address");
+      return;
+    }
+    
+    setFormError(null);
     const result = await handleLogin(email, password);
     if (result.success) {
       navigate('/');
